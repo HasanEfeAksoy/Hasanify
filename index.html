@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasanify</title>
+
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+        * {
+            font-family: monospace;
+            color: #fff;
+            font-weight: lighter;
+        }
+
+        ::-moz-selection {
+            background: #FFBABA;
+        }
+        ::selection {
+            background: #FFBABA;
+        }
+
+        .fill-screen {
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.7);
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+
+            display: none;
+        }
+
+        .circle {
+            background-color: #9D3C72;
+            opacity: 0.25;
+            width: 500px;
+            height: 500px;
+            border-radius: 250px;
+            position: absolute;
+            z-index: -10;
+        }
+
+        #videoadd {
+            margin: 2px;
+            padding: 0px;
+            width: 30px;
+            height: 30px;
+            outline: none;
+            border-radius: 15px;
+            border: 1px solid #fff;
+            background-color: #C85C8E;
+            cursor: pointer;
+            color: #000;
+            font-weight: 900;
+        }
+
+        ::placeholder {
+            color: #000;
+            opacity: 0.6;
+        }
+        :-ms-input-placeholder {
+            color: #000;
+        }
+        ::-ms-input-placeholder {
+            color: #000;
+        }
+
+        .textinputs {
+            margin: 2px;
+            padding: 0px;
+            width: 230px;
+            height: 20px;
+            outline: none;
+            border: 1px solid #fff;
+            border-radius: 10px;
+            text-align: center;
+            background-color: #C85C8E;
+            font-size: small;
+            font-weight: bold;
+            color: #000;
+        }
+
+
+        .music-list::-webkit-scrollbar {
+            width: 10px;
+        }
+        .music-list::-webkit-scrollbar-track {
+            background: #262626; 
+        }
+        .music-list::-webkit-scrollbar-thumb {
+            background: #888; 
+        }
+        .music-list::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        .music-list {
+            background-color: #7B2869;
+            margin: 10px 30px 10px 30px;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            word-break: break-all;
+            border: 1px solid #262626;
+        }
+        
+        .music {
+            margin: 0px;
+            padding: 20px;
+            max-width: 470px;
+            word-break: break-all;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            text-align: center;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #262626;
+        }
+        .music #inName {
+            transition: 300ms;
+        }
+        .music:hover #inName {
+            color: #262626;
+        }
+
+
+        .controller {
+            width: 100%;
+            height: 60px;
+            background-color: #C85C8E;
+            position: absolute;
+            top: 412px;
+            left: 0px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="fill-screen">
+        <h1 id="music-download-progress" style="font-size: 30px; color: #000;">0%</h1>
+        <h4 style="color: #000;">Please wait, while the music is downloaded to avoid false downloads.</h4>
+    </div>
+
+    <div class="circle" style="top: -140px; left: -110px;"></div>
+    <div class="circle" style="top: 100; left: 110px;"></div>
+    
+    <center>
+        <h1 style="letter-spacing: 7px; margin-top: 30px;">Hasanify</h1>
+        <h4>Easy and Secure to download Youtube musics</h4>
+    
+        <br>
+
+        <input type="text" class="textinputs" placeholder="Youtube Link.." spellcheck="false" id="videolink">
+        <input type="button" value="+" id="videoadd" onclick="addMusic()">
+
+        <br>
+        <br>
+
+        <div class="music-list">
+
+        </div>
+
+        <div class="controller">
+            <img src="./play.png" id="stopOrPlayMusicIcon" style="width: 20px; cursor: pointer;" onclick="stopOrPlayMusic()">
+            <h4 id="currentMusicName" style="color: #000;">Fade to Bla..</h4>
+
+            <div class="location-controller" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+                <h5 id="musicTime" style="margin-right: 5px; color: #000;">0:0:0</h5>
+                <input type="range" id="currentLocation" min="0" max="100" step="1" value="0" style="width: 200px;">
+            </div>
+            
+            <div class="sound-controller" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+                <img src="./sound.png" style="width: 15px; margin-right: 5px;">
+                <input type="range" id="currentSoundLoudLevel" min="0" max="1" step="0.01" value="0.5" style="width: 70px;">
+            </div>
+        </div>
+
+
+        <audio style="visibility: hidden; position: absolute;" id="audioElement" src="" controls></audio>
+
+    </center>
+
+
+
+    <script>
+        const electron = require("electron");
+        const { ipcRenderer } = electron;
+
+
+        const videoLink = document.querySelector("#videolink");
+        const videoAdd = document.querySelector("#videoadd");
+        const fillScreen = document.querySelector(".fill-screen");
+        const musicDownloadProgress = document.querySelector("#music-download-progress");
+
+        const musicList = document.querySelector(".music-list");
+        
+        const stopOrPlayMusicIcon = document.querySelector("#stopOrPlayMusicIcon");
+        const currentMusicName = document.querySelector("#currentMusicName");
+        const musicTime = document.querySelector("#musicTime");
+        const currentLocation = document.querySelector("#currentLocation");
+        const currentSoundLoudLevel = document.querySelector("#currentSoundLoudLevel");
+
+        const audioElement = document.querySelector("#audioElement");
+
+
+
+        ipcRenderer.on("downloading", (event, data) => {
+            fillScreen.style.display = "flex";
+            musicDownloadProgress.innerHTML = data;
+                
+            if (data == "You Used an Invalid Link.") {
+                setTimeout(() => {
+                    fillScreen.style.display = "none";
+                    musicDownloadProgress.innerHTML = "0%";
+                    videoLink.disabled = false;
+                    videoAdd.disabled = false;
+                }, 2000);
+            }
+            else {
+                if (data == "100.00%") {
+                    fillScreen.style.display = "none";
+                    musicDownloadProgress.innerHTML = "0%";
+                    videoLink.disabled = false;
+                    videoAdd.disabled = false;
+
+                    ipcRenderer.send("reloadMusicList", null)
+                }
+            }
+        });
+
+
+        ipcRenderer.on("musicFilesNames", (event, data) => {
+    
+            resetController();
+
+            
+            musicList.innerHTML = "";
+
+            if (data.length == 0) {
+                musicList.innerHTML = ":\\ You have not any musics :/";
+            }
+
+            for (let i = 0; i < data.length; i++) {
+                const currentData = data[i];
+                const editedData = currentData.replace(/['"`\\/<>%&+]/g, '\\$&');
+
+                musicList.innerHTML += `
+                    <div class="music" onclick=
+                        "
+                            openMusic('${editedData}');
+                        ">
+                        <h4 style="margin: 0px; padding: 0px;" id="inName">${currentData}</h4>
+                        <input style="margin: 0px; margin-left: 10px; padding: 0px; width: 30px; height: 30px; color: #fff; background-color: #262626; border-radius: 30px; border: 1px solid #fff; font-weight: 900; cursor: pointer;" type="button" value="X" class="remove" onclick=
+                        "
+                            removeMusic(event, '${editedData}');
+                        ">
+                    </div>
+                `;
+            }
+        });
+
+
+        ipcRenderer.on("musicStartPlaying", (event, data) => {
+
+            currentMusicName.innerHTML = data[1].substring(0, 11) + "..";
+            stopOrPlayMusicIcon.setAttribute("src", "./pause.png");
+
+
+            audioElement.setAttribute("src", data[0]);
+
+
+            currentLocation.addEventListener("change", () => {
+                audioElement.currentTime = (currentLocation.value / 100) * audioElement.duration;
+            });
+       
+            audioElement.addEventListener("timeupdate", () => {
+                currentLocation.value = (audioElement.currentTime / audioElement.duration) * 100;
+
+                let currentTime = Math.floor(audioElement.currentTime);
+                let hours = Math.floor(currentTime / 3600);
+                let minutes = Math.floor((currentTime % 3600) / 60);
+                let seconds = currentTime % 60;
+                
+                musicTime.innerHTML = hours + ":" + minutes + ":" + seconds;
+            });
+
+            audioElement.addEventListener("ended", function() {
+                resetController();
+            });
+
+            
+            currentSoundLoudLevel.addEventListener("input", () => {
+                audioElement.volume = currentSoundLoudLevel.value;
+            });
+
+            audioElement.play();
+        });
+        
+
+
+        function openMusic(musicName) {
+            resetController();
+            ipcRenderer.send("openMusic", musicName);
+        }
+        
+        function stopOrPlayMusic() {
+            if (audioElement.getAttribute("src") != "") {
+                if (audioElement.paused) {
+                    audioElement.play();
+                    stopOrPlayMusicIcon.setAttribute("src", "./pause.png");
+                }
+                else {
+                    audioElement.pause();
+                    stopOrPlayMusicIcon.setAttribute("src", "./play.png");
+                }
+            }
+            else {
+                stopOrPlayMusicIcon.setAttribute("src", "./play.png");
+            }
+        }
+
+        function resetController() {
+            currentMusicName.innerHTML = "no music";
+            musicTime.innerHTML = "0:0:0";
+
+            stopOrPlayMusicIcon.setAttribute("src", "./play.png");
+
+            currentLocation.value = 0;
+
+            audioElement.setAttribute("src", "");
+        }
+
+        
+        function addMusic() {
+            videoLink.disabled = true;
+            videoAdd.disabled = true;
+            ipcRenderer.send("addMusic", videoLink.value.toString());
+            videoLink.value = "";
+        }
+
+        function removeMusic(event, musicName) {
+            event.stopPropagation();
+            if (!confirm("Are you sure, want to remove the music?")) return;
+            ipcRenderer.send("removeMusic", musicName);
+        }
+
+    </script>
+</body>
+</html>
