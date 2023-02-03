@@ -107,7 +107,7 @@ app.on("ready", () => {
 
 
     ipcMain.on("openMusic", (event, data) => {
-        win.webContents.send("musicStartPlaying", [folder_path + "/" + data, data]);
+        win.webContents.send("musicStartPlaying", [path.join(__dirname + folder_path.substring(1), data), data]);
     });
 
 });
