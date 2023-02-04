@@ -192,8 +192,6 @@
         </div>
 
 
-        <audio style="visibility: hidden; position: absolute;" id="audioElement" src="" controls></audio>
-
     </center>
 
 
@@ -216,8 +214,7 @@
         const currentLocation = document.querySelector("#currentLocation");
         const currentSoundLoudLevel = document.querySelector("#currentSoundLoudLevel");
 
-        const audioElement = document.querySelector("#audioElement");
-
+        const audioInstant = new Audio();
 
 
         ipcRenderer.on("downloading", (event, data) => {
@@ -282,17 +279,18 @@
             stopOrPlayMusicIcon.setAttribute("src", "./pause.png");
 
 
-            audioElement.setAttribute("src", data[0]);
+            audioInstant.src = data[0];
 
 
             currentLocation.addEventListener("change", () => {
-                audioElement.currentTime = (currentLocation.value / 100) * audioElement.duration;
+                audioInstant.currentTime = (currentLocation.value / 100) * audioInstant.duration;
             });
        
-            audioElement.addEventListener("timeupdate", () => {
-                currentLocation.value = (audioElement.currentTime / audioElement.duration) * 100;
 
-                let currentTime = Math.floor(audioElement.currentTime);
+            audioInstant.addEventListener("timeupdate", () => {
+                currentLocation.value = (audioInstant.currentTime / audioInstant.duration) * 100;
+
+                let currentTime = Math.floor(audioInstant.currentTime);
                 let hours = Math.floor(currentTime / 3600);
                 let minutes = Math.floor((currentTime % 3600) / 60);
                 let seconds = currentTime % 60;
@@ -300,16 +298,18 @@
                 musicTime.innerHTML = hours + ":" + minutes + ":" + seconds;
             });
 
-            audioElement.addEventListener("ended", function() {
+
+            audioInstant.addEventListener("ended", function() {
                 resetController();
             });
 
-            
+
             currentSoundLoudLevel.addEventListener("input", () => {
-                audioElement.volume = currentSoundLoudLevel.value;
+                audioInstant.volume = currentSoundLoudLevel.value;
             });
 
-            audioElement.play();
+
+            audioInstant.play();
         });
         
 
@@ -320,20 +320,20 @@
         }
         
         function stopOrPlayMusic() {
-            if (audioElement.getAttribute("src") != "") {
-                if (audioElement.paused) {
-                    audioElement.play();
+            if (audioInstant.getAttribute("src") != "") {
+                if (audioInstant.paused) {
+                    audioInstant.play();
                     stopOrPlayMusicIcon.setAttribute("src", "./pause.png");
                 }
                 else {
-                    audioElement.pause();
+                    audioInstant.pause();
                     stopOrPlayMusicIcon.setAttribute("src", "./play.png");
                 }
             }
             else {
                 stopOrPlayMusicIcon.setAttribute("src", "./play.png");
             }
-        }
+        }   
 
         function resetController() {
             currentMusicName.innerHTML = "no music";
@@ -343,7 +343,7 @@
 
             currentLocation.value = 0;
 
-            audioElement.setAttribute("src", "");
+            audioInstant.src = "";
         }
 
         

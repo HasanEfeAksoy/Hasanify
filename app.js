@@ -107,7 +107,15 @@ app.on("ready", () => {
 
 
     ipcMain.on("openMusic", (event, data) => {
-        win.webContents.send("musicStartPlaying", [path.join(__dirname + folder_path.substring(1), data), data]);
+
+        /*
+        
+            If you will use electron-packager, you have to change line 118. It have to be like 115.
+
+            win.webContents.send("musicStartPlaying", [path.join(__dirname, "../../" + folder_path.substring(2) + "/" + data), data]);
+        
+        */
+        win.webContents.send("musicStartPlaying", [path.join(__dirname + folder_path.substring(1), data), data]);    
     });
 
 });

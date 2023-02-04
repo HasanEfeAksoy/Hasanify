@@ -1,5 +1,6 @@
 {
   "name": "hasanify",
+  "productName": "Hasanify",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
@@ -10,7 +11,6 @@
   "author": "Hasan Efe AKSOY",
   "license": "ISC",
   "dependencies": {
-    "audic": "^3.0.1",
     "electron": "^22.2.0",
     "fs": "0.0.1-security",
     "ytdl-core": "^4.11.2"
