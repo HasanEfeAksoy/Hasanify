@@ -33,7 +33,9 @@ async function downloadMusic(youtubeMusicUrl) {
         if (!fs.existsSync(folder_path)) {
             fs.mkdirSync(folder_path);
         }
-        stream.pipe(fs.createWriteStream(folder_path + "/" + info.videoDetails.title.substring(0, 70) + ".mp3"));
+
+        var titleName = info.videoDetails.title.replace(/['"”`\\/<>%&+:*?|#]/g, '^').substring(0, 60) + ".mp3"; // '^' -> '\\$&'
+        stream.pipe(fs.createWriteStream(folder_path + "/" + titleName));
         
     } catch (err) {
         win.webContents.send("downloading", "You Used an Invalid Link.");
@@ -115,7 +117,7 @@ app.on("ready", () => {
             win.webContents.send("musicStartPlaying", [path.join(__dirname, "../../" + folder_path.substring(2) + "/" + data), data]);
         
         */
-        win.webContents.send("musicStartPlaying", [path.join(__dirname + folder_path.substring(1), data), data]);    
+        win.webContents.send("musicStartPlaying", [path.join(__dirname + folder_path.substring(1), data), data]);
     });
 
 });
